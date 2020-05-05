@@ -11,8 +11,9 @@ pool:
   vmImage: 'windows-2019'
 
 steps:
-- task: CmdLine@2
+- task: PowerShell@2
   inputs:
+    targetType: 'inline'
     script: 'wget $(orbiterSdkPath)'
 - task: ExtractFiles@1
   inputs:
