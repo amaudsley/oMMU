@@ -24,4 +24,6 @@ steps:
 - task: MSBuild@1
   inputs:
     solution: '**/*.sln'
+    platform: 'x86'
+    configuration: 'release'
     msbuildArguments: '/p:orbiterDir="$(Agent.TempDirectory)\dependencies"'
