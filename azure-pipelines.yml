@@ -14,13 +14,13 @@ steps:
 - task: PowerShell@2
   inputs:
     targetType: 'inline'
-    script: 'wget $(orbiterSdkPath)'
+    script: 'cd D:/temp/dependencies/ wget $(orbiterSdkPath)'
 - task: ExtractFiles@1
   inputs:
-    archiveFilePatterns: 'orbitersdk.zip'
+    archiveFilePatterns: 'D:/temp/dependencies/orbitersdk.zip'
     destinationFolder: 'dependencies'
     cleanDestinationFolder: true
 - task: MSBuild@1
   inputs:
     solution: '**/*.sln'
-    msbuildArguments: 'MSBuild.exe /p:OrbiterDir=/dependencies'
+    msbuildArguments: 'MSBuild.exe /p:OrbiterDir=D:/temp/dependencies'
