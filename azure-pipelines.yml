@@ -27,3 +27,8 @@ steps:
     platform: 'x86'
     configuration: 'release'
     msbuildArguments: '/p:orbiterDir="$(Agent.TempDirectory)\dependencies"'
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)\Release'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
