@@ -1,4 +1,5 @@
 # Starter pipeline
+
 # Start with a minimal pipeline that you can customize to build and deploy your code.
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
@@ -10,6 +11,15 @@ pool:
   vmImage: 'windows-2019'
 
 steps:
+- task: CmdLine@2
+  inputs:
+    script: 'wget $(orbiterSdkPath)'
+- task: ExtractFiles@1
+  inputs:
+    archiveFilePatterns: 'orbitersdk.zip'
+    destinationFolder: 'dependencies'
+    cleanDestinationFolder: true
 - task: MSBuild@1
   inputs:
     solution: '**/*.sln'
+    msbuildArguments: 'MSBuild.exe /p:OrbiterDir=/dependencies'
