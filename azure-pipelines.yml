@@ -18,8 +18,8 @@ steps:
      wget $(orbiterSdkPath) -outfile $(Agent.TempDirectory)/orbitersdk.zip
 - task: ExtractFiles@1
   inputs:
-    archiveFilePatterns: '$(Agent.TempDirectory)/orbitersdk.zip'
-    destinationFolder: 'dependencies'
+    archiveFilePatterns: '$(Agent.TempDirectory)\orbitersdk.zip'
+    destinationFolder: '$(Agent.TempDirectory)\dependencies'
     cleanDestinationFolder: true
 - task: MSBuild@1
   inputs:
