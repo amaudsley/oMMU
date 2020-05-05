@@ -14,7 +14,9 @@ steps:
 - task: PowerShell@2
   inputs:
     targetType: 'inline'
-    script: 'cd D:/temp/dependencies/ wget $(orbiterSdkPath)'
+    script: | 
+     cd D:/temp/dependencies/ 
+     wget $(orbiterSdkPath)
 - task: ExtractFiles@1
   inputs:
     archiveFilePatterns: 'D:/temp/dependencies/orbitersdk.zip'
