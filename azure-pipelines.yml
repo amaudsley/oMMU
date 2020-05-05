@@ -19,7 +19,7 @@ steps:
 - task: ExtractFiles@1
   inputs:
     archiveFilePatterns: '$(Agent.TempDirectory)\orbitersdk.zip'
-    destinationFolder: '$(Agent.TempDirectory)\dependencies'
+    destinationFolder: '$(Agent.TempDirectory)\dependencies\orbitersdk'
     cleanDestinationFolder: true
 - task: MSBuild@1
   inputs:
