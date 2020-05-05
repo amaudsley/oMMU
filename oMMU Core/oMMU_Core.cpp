@@ -288,7 +288,7 @@ oMMUStatus oMMUCore::AddCrew(const oMMUCrew & crewToAdd, int slot)
 // TODO : COmment RemoveCrewMemberByID
 oMMUStatus oMMUCore::RemoveCrew(int index)
 {
-	if (mCrew.count(index)) { // Doug said there was an off-by-one error here, but he's drunk, revert if change fucks it
+	if (mCrew.count(index)) { 
 		mCrew.erase(index);
 		return oMMUStatus::OK;
 	}
