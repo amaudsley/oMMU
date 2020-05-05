@@ -15,14 +15,14 @@ steps:
   inputs:
     targetType: 'inline'
     script: | 
-     cd D:/temp/dependencies/ 
+     cd $(Agent.TempDirectory)	
      wget $(orbiterSdkPath)
 - task: ExtractFiles@1
   inputs:
-    archiveFilePatterns: 'D:/temp/dependencies/orbitersdk.zip'
+    archiveFilePatterns: '$(Agent.TempDirectory)/orbitersdk.zip'
     destinationFolder: 'dependencies'
     cleanDestinationFolder: true
 - task: MSBuild@1
   inputs:
     solution: '**/*.sln'
-    msbuildArguments: 'MSBuild.exe /p:OrbiterDir=D:/temp/dependencies'
+    msbuildArguments: 'MSBuild.exe /p:OrbiterDir=$(Agent.TempDirectory)'
