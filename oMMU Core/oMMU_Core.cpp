@@ -45,7 +45,7 @@ int oMMUCore::CreateAirlockFromPort(int portID, bool openByDefault)
 	pParentVessel->GetDockParams(hDock, pos, dir, rot);
 
 	AirlockExt newAirlock;
-	newAirlock.radius = 5.0f;
+	newAirlock.radius = 10.0f;
 	newAirlock.type = AirlockType::dockingPort;
 	newAirlock.position = pos;
 	newAirlock.direction = dir;
@@ -64,7 +64,7 @@ int oMMUCore::AddDefaultCrew()
 
 
 /* Registers an airlock for this vessel - multiple airlocks are allowed (duh), it'd be insane to do anything else*/
-int oMMUCore::AddAirlock(const Airlock & airlock)
+int oMMUCore::AddAirlock(const Airlock& airlock)
 {
 	int nextIndex = 0;
 	if (mAirlocks.size() > 0)
@@ -76,7 +76,7 @@ int oMMUCore::AddAirlock(const Airlock & airlock)
 }
 
 // TODO : Comment SetAirlockState
-oMMUStatus oMMUCore::SetAirlockState(const Airlock & airlockState)
+oMMUStatus oMMUCore::SetAirlockState(const Airlock& airlockState)
 {
 	int airlockID = airlockState.GetID();
 	for (size_t i = 0; i < mAirlocks.size(); i++)
@@ -95,7 +95,7 @@ oMMUStatus oMMUCore::SetAirlockState(const Airlock & airlockState)
 }
 
 // TODO : COmment GetAirlockState
-oMMUStatus oMMUCore::GetAirlockState(int airlockID, Airlock & airlockOut)
+oMMUStatus oMMUCore::GetAirlockState(int airlockID, Airlock& airlockOut)
 {
 	if (mAirlocks.count(airlockID) == 1) {
 		airlockOut = mAirlocks[airlockID];
@@ -110,7 +110,7 @@ std::map<int, AirlockExt> oMMUCore::GetAirlocks()
 }
 
 // TODO : Comment GetCrewByIndex
-oMMUStatus oMMUCore::GetCrewState(int index, oMMUCrew & crew)
+oMMUStatus oMMUCore::GetCrewState(int index, oMMUCrew& crew)
 {
 	if (mCrew.count(index)) {
 		crew = mCrew[index];
@@ -120,7 +120,7 @@ oMMUStatus oMMUCore::GetCrewState(int index, oMMUCrew & crew)
 		return oMMUStatus::Failure;
 }
 
-oMMUStatus oMMUCore::SetCrewState(int index, const oMMUCrew & crew)
+oMMUStatus oMMUCore::SetCrewState(int index, const oMMUCrew& crew)
 {
 	if (mCrew.count(index) == 1) {
 		mCrew[index] = crew;
@@ -181,12 +181,12 @@ oMMUStatus oMMUCore::BeginEVA(int crewIndex, int airlockIndex, bool setOnGround,
 			/* Calculate degrees / meter */
 			double planetRadius = oapiGetSize(pParentVessel->GetSurfaceRef());
 			double metersPerDegree = (planetRadius * 2 * PI) / 360;
-			
+
 			VECTOR3 rotatedPosition; // Holds the airlock position after being converted to horizon frame
 			pParentVessel->HorizonRot(airlock.position, rotatedPosition);
 
 			/* Update the position of the MMU vessel to be at the airlock */
-			vesselStatus.surf_lat += (rotatedPosition.z / metersPerDegree) * RAD; 
+			vesselStatus.surf_lat += (rotatedPosition.z / metersPerDegree) * RAD;
 			vesselStatus.surf_lng += (rotatedPosition.x / metersPerDegree) * RAD;
 
 		}
@@ -198,6 +198,7 @@ oMMUStatus oMMUCore::BeginEVA(int crewIndex, int airlockIndex, bool setOnGround,
 		auto mmuVessel = oapiCreateVesselEx(mmuName, "oMMU", &vesselStatus);
 		oMMU_MMU* newMMU = static_cast<oMMU_MMU*>(oapiGetVesselInterface(mmuVessel)); // Instantiate the new MMU
 		newMMU->setMMUData(mCrew[crewIndex]); // Pass crew data along
+
 		RemoveCrew(crewIndex);
 
 		// Set camera / input focus on the new MMU vessel if requested
@@ -240,25 +241,24 @@ oMMUStatus oMMUCore::TransferCrew(int crewIndex, int portIndex)
 	}
 }
 
-oMMUStatus oMMUCore::TransferCrewDirect(int crewIndex, const VESSEL * targetVessel)
+oMMUStatus oMMUCore::TransferCrewDirect(int crewIndex, const VESSEL* targetVessel)
 {
 	return TryTransfer(targetVessel, crewIndex);
 }
 
 // TODO : Comment AddCrewMember
-oMMUStatus oMMUCore::AddCrew(const oMMUCrew & crewToAdd, int slot)
+oMMUStatus oMMUCore::AddCrew(const oMMUCrew& crewToAdd, int slot)
 {
 	// TODO : Add out of bounds 
 	/* Insert at first available slot */
 	if (slot == 0) {
 		/* Cover the case of having 0 crew members present - use the 0th slot*/
 		if (mCrew.size() == 0) {
-			mCrew[1] = crewToAdd;
+			mCrew[0] = crewToAdd;
 			return oMMUStatus::OK;
 		}
 
-		// TODO : I think this is logically sound, but requires testing
-		// TODO : Potential out of bounds error (if we have 4.odd billion crew members), should probably be fixed but I *really* doubt it'll be an issue
+		// Insert the crew member in the next available empty slot.
 		for (size_t i = 1; i <= mCrewLimit; i++)
 		{
 			if (mCrew.count(i) == 0) {
@@ -266,7 +266,7 @@ oMMUStatus oMMUCore::AddCrew(const oMMUCrew & crewToAdd, int slot)
 				return oMMUStatus::OK;
 			}
 		}
-		
+
 		return oMMUStatus::VesselFull;
 
 	}
@@ -285,10 +285,10 @@ oMMUStatus oMMUCore::AddCrew(const oMMUCrew & crewToAdd, int slot)
 	}
 }
 
-// TODO : COmment RemoveCrewMemberByID
+// TODO : Comment RemoveCrewMemberByID
 oMMUStatus oMMUCore::RemoveCrew(int index)
 {
-	if (mCrew.count(index)) { // Doug said there was an off-by-one error here, but he's drunk, revert if change fucks it
+	if (mCrew.count(index)) {
 		mCrew.erase(index);
 		return oMMUStatus::OK;
 	}
@@ -307,7 +307,7 @@ bool oMMUCore::RecallState(const char* line)
 		oMMUCrew crewMember;
 		int slot = -1;
 		sscanf(line + 4, "%i::%[^::]::%[^::]::%i::%i::%lf::%[^::]::%[^::]", &slot, crewMember.role.GetBuffer(SCENARIO_READ_BUFFER_LENGTH), crewMember.name.GetBuffer(SCENARIO_READ_BUFFER_LENGTH),
-			&crewMember.age, &crewMember.pulse, &crewMember.weight, crewMember.evaMesh.GetBuffer(SCENARIO_READ_BUFFER_LENGTH),crewMember.miscData.GetBuffer(SCENARIO_READ_BUFFER_LENGTH));
+			&crewMember.age, &crewMember.pulse, &crewMember.weight, crewMember.evaMesh.GetBuffer(SCENARIO_READ_BUFFER_LENGTH), crewMember.miscData.GetBuffer(SCENARIO_READ_BUFFER_LENGTH));
 		/* Release cstring buffers */
 		crewMember.name.ReleaseBuffer();
 		crewMember.role.ReleaseBuffer();
@@ -328,15 +328,15 @@ void oMMUCore::SaveState(FILEHANDLE scn)
 	CString cbuf;
 	for (auto& i : mCrew)
 	{
-		cbuf.Format("%i::%s::%s::%i::%i::%lf::%s::%s", i.first, i.second.role, i.second.name, i.second.age, i.second.pulse, i.second.weight, i.second.evaMesh,i.second.miscData);
+		cbuf.Format("%i::%s::%s::%i::%i::%lf::%s::%s", i.first, i.second.role, i.second.name, i.second.age, i.second.pulse, i.second.weight, i.second.evaMesh, i.second.miscData);
 		oapiWriteScenario_string(scn, "CREW", cbuf.GetBuffer());
 	}
 }
 
 // TODO : Comment TryIngress
-oMMUStatus oMMUCore::TryIngress(const VESSEL * hMMU, double* ret)
+oMMUStatus oMMUCore::TryIngress(const VESSEL* hMMU, double* ret)
 {
-	/* Early escape in case some idiot is trying to enter into an airlockless vessel */
+	/* Early escape if attempting to enter a vessel without airlocks. */
 	if (mAirlocks.empty())
 		return oMMUStatus::AirlockClosed;
 
@@ -383,7 +383,7 @@ oMMUStatus oMMUCore::SetInteractionAreaState(int areaID, const InteractionArea& 
 }
 
 // TODO :: Comment TryTransfer
-oMMUStatus oMMUCore::TryTransfer(const VESSEL * pTargetVessel, int crewIndex) {
+oMMUStatus oMMUCore::TryTransfer(const VESSEL* pTargetVessel, int crewIndex) {
 	/* Search the mmu vessel compatability list - try and find*/
 	oMMUCore* otherVesselInterface = nullptr;
 	for each (oMMUCore * vessel in m_mmuCompatVessels)
@@ -393,21 +393,19 @@ oMMUStatus oMMUCore::TryTransfer(const VESSEL * pTargetVessel, int crewIndex) {
 			break;
 		}
 	}
+
 	/* If we were unable to retrieve a handle we can presume there's no valid vessels */
 	if (otherVesselInterface == nullptr)
 		return oMMUStatus::CrewTransferFailure;
 
-	/* Try to transfer to the retrieved vessel */
-	auto mmuInterface = (ISupportsOMMUCallbacks*)(pTargetVessel);
-
-	bool canAddCrew = false;
-	/* ISupportsOMMUCallbacks interface implemented - custom transfer behaviours present */
-	if (mmuInterface != nullptr) {
-		canAddCrew = mmuInterface->OnTryTransferCrew(pParentVessel, mCrew[crewIndex], 0);
-	}
+	/* Try to transfer to the retrieved vessel, invoke the handler if available. */
+	bool canAddCrew = true;
+	//if (otherVesselInterface->OnTryTransferCrew != nullptr) {
+	//	canAddCrew = otherVesselInterface->OnTryTransferCrew(pParentVessel, mCrew[crewIndex], 0);
+	//}
 
 	/* Transfer the crew member */
-	if (mmuInterface == nullptr || canAddCrew) {
+	if (canAddCrew) {
 		oMMUCrew* pCrewMember = mGetCrewByIndex(crewIndex); // Retrieve 
 		oMMUStatus ingressStatus = otherVesselInterface->AddCrew(*pCrewMember); // Attempt the transfer, store the return value
 
@@ -444,7 +442,7 @@ oMMUStatus oMMUCore::SetCrewLimit(int crewLimit)
 }
 
 // TODO : Comment GetoMMUInstance
-oMMUCore* GetoMMUInstance(VESSEL * hVessel)
+oMMUCore* GetoMMUInstance(VESSEL* hVessel)
 {
 	return new oMMUCore(hVessel);
 }
@@ -454,7 +452,7 @@ oMMUCore* GetoMMUInstance(VESSEL * hVessel)
 // TODO : Optimize
 // TODO : Really, just throw this one out and start over.
 // TODO : Return airlock distance to caller (for HUD readout)
-oMMUCore* GetClosestMMUCompatibleVessel(const VESSEL * hVessel)
+oMMUCore* GetClosestMMUCompatibleVessel(const VESSEL* hVessel)
 {
 	const VECTOR3& zero = _V(0, 0, 0);
 	/* Coordinate vectors */
@@ -486,7 +484,7 @@ oMMUCore* GetClosestMMUCompatibleVessel(const VESSEL * hVessel)
 			for each (auto airlock in airlocks)
 			{
 				closestVessel->Local2Rel(airlock.second.position, airlockRelCoords);
-				candidates.push_back(std::pair<oMMUCore*,double>(mgr, dist(ourRelCoords, airlockRelCoords)));
+				candidates.push_back(std::pair<oMMUCore*, double>(mgr, dist(ourRelCoords, airlockRelCoords)));
 			}
 		}
 	}

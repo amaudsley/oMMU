@@ -74,6 +74,8 @@ public:
 	
 	virtual oMMUStatus SetInteractionAreaState(int areaID, const InteractionArea& in);
 	
+	//virtual oMMUStatus RegisterInteractionHandler(OnInteractionTriggered handler);
+
 	/*--- END API VERSION 1.0 ---*/
 	/* Private API */
 	oMMUStatus TryTransfer(const VESSEL * pTargetVessel, int crewIndex);

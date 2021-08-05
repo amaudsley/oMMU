@@ -1,13 +1,14 @@
 #pragma once
 #define ORBITER_MODULE
-#define OMMU_DEFAULT_MESH "oMMU\\Crew\\anna_flightsuit_ground"
+#define OMMU_DEFAULT_MESH "mmu"
 #define OMMU_DEFAULT_ROLE "Passenger"
 #define OMMU_DEFAULT_FUEL 10
 #define OMMU_DEFAULT_RCSTH 500
 #define OMMU_DEFAULT_RCSISP 10000000
+#define OMMU_DEFAULT_WALKING_SPEED 1.4
+
 #include "Orbitersdk.h"
 #include "../oMMU Core/oMMU_Core.h"
-#include "XRSound.h"
 
 enum mmuState {
 	IN_SPACE,
@@ -15,6 +16,12 @@ enum mmuState {
 	ON_GROUND_IMMOBILE,
 	ON_GROUND_JUMPING,
 	DEAD
+};
+
+struct SurfaceMovementInputStatus {
+	int xInput = 0;
+	int yInput = 0;
+	int rotateInput = 0;
 };
 
 /* Utilized for the (poor) attempt at having a private API */
@@ -48,22 +55,17 @@ public:
 	MATRIX3 RotationMatrix(VECTOR3 angles, bool xyz);
 	void doGroundMovement(double deltaT);
 	void TryIngress();
-	XRSound* m_pXRSound;
 
 private:
 	oMMUCrew* mmuData;
 	PROPELLANT_HANDLE m_oxygenResource;
 	mmuState m_currentState = mmuState::IN_SPACE;
 	bool m_hasBeenInitialized = false;
+	SurfaceMovementInputStatus inputStatus;
 
+	// Actual surface velocity.
+	// X - Left / Right, Y - Forward / Backwards, Z - Heading?!
+	VECTOR3 m_surfaceVelocity = VECTOR3();
 
-	int rotate = 0;
-	/* Surface movement */
-	bool m_isInGroundMode = false;
-	double m_surfaceAngle = 0;
-	double m_surfaceVelocityX = 0;
-	double m_surfaceVelocityY = 0;
-	double xVelocity;
-	double forwardVelocity;
 	bool doJump = false;
 };

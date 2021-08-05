@@ -40,7 +40,6 @@ oMMU_MMU::~oMMU_MMU()
 // --------------------------------------------------------------
 void oMMU_MMU::clbkSetClassCaps(FILEHANDLE cfg)
 {
-	m_pXRSound = XRSound::CreateInstance(this);
 	THRUSTER_HANDLE th_rcs[14], th_group[4];
 	PROPELLANT_HANDLE hMainFuel = CreatePropellantResource(OMMU_DEFAULT_FUEL);
 	m_oxygenResource = CreatePropellantResource(0.5, 0.5, 1);
@@ -116,7 +115,6 @@ void oMMU_MMU::clbkSetClassCaps(FILEHANDLE cfg)
 
 	CreateThrusterGroup(th_rcs + 12, 1, THGROUP_ATT_FORWARD);
 	CreateThrusterGroup(th_rcs + 13, 1, THGROUP_ATT_BACK);
-
 }
 
 /// <summary>
@@ -147,17 +145,17 @@ void oMMU_MMU::clbkPreStep(double simt, double simdt, double mjd)
 				doGroundMovement(simdt);
 			}
 		}
-		else if (m_currentState != mmuState::DEAD && m_currentState != mmuState::IN_SPACE){
+		else if (m_currentState != mmuState::DEAD && m_currentState != mmuState::IN_SPACE) {
 			setMMUState(mmuState::IN_SPACE);
 		}
 	}
-
 }
 
 void oMMU_MMU::clbkPostStep(double simt, double simdt, double mjd)
 {
-	
+
 }
+
 int oMMU_MMU::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 {
 	if (!down)
@@ -171,50 +169,42 @@ int oMMU_MMU::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 
 int oMMU_MMU::clbkConsumeDirectKey(char* kstate)
 {
-
 	if (m_currentState == mmuState::ON_GROUND_MOBILE) {
 		this->SetAttitudeMode(RCS_NONE);
 		if (KEYDOWN(kstate, OAPI_KEY_W)) {
-			forwardVelocity = 10;
+			inputStatus.yInput = 1;
 		}
 		else if (KEYDOWN(kstate, OAPI_KEY_S)) {
-			forwardVelocity = -7.5;
+			inputStatus.yInput = -1;
 		}
 		else
 		{
-			forwardVelocity = 0.0;
+			inputStatus.yInput = 0;
 		}
 
 		if (KEYDOWN(kstate, OAPI_KEY_A)) {
-			xVelocity = -0.1;
+			inputStatus.xInput = -1;
 		}
 		else if (KEYDOWN(kstate, OAPI_KEY_D)) {
-			xVelocity = 0.1;
+			inputStatus.xInput = 1;
 		}
 		else
 		{
-			xVelocity = 0.0;
+			inputStatus.xInput = 0;
 		}
 
 		if (KEYDOWN(kstate, OAPI_KEY_E)) {
-			rotate = 1;
+			inputStatus.rotateInput = 1;
 		}
-		else if (KEYDOWN(kstate,OAPI_KEY_Q)){
-			rotate = -1;
+		else if (KEYDOWN(kstate, OAPI_KEY_Q)) {
+			inputStatus.rotateInput = -1;
 		}
 		else {
-			rotate = 0;
+			inputStatus.rotateInput = 0;
 		}
-
-		if (KEYDOWN(kstate, OAPI_KEY_SPACE)) {
-			doJump = true;
-			m_isInGroundMode = 0;
-		}
-
 	}
 	return 0;
 }
-
 
 bool oMMU_MMU::clbkLoadVC(int id)
 {
@@ -235,7 +225,7 @@ void oMMU_MMU::setMMUState(mmuState newState)
 			mmuData->age = 30;
 			mmuData->pulse = 70;
 			mmuData->weight = 140;
-			mmuData->name = GetName(); // For the love of Odin, come up with a better method.
+			mmuData->name = GetName(); // Default to the name of the vessel.
 			mmuData->role = OMMU_DEFAULT_ROLE;
 		}
 		if (mmuData->evaMesh != "") {
@@ -248,7 +238,7 @@ void oMMU_MMU::setMMUState(mmuState newState)
 
 		m_hasBeenInitialized = true;
 	}
-	m_currentState = newState; 
+	m_currentState = newState;
 }
 
 /// <summary>
@@ -274,21 +264,39 @@ MATRIX3 oMMU_MMU::RotationMatrix(VECTOR3 angles, bool xyz = FALSE)
 	return m;
 }
 
+
+static inline void CalculateVelocity(double& velocity, int inputStatus, double simdt) {
+	if (inputStatus != 0) {
+		velocity += (OMMU_DEFAULT_WALKING_SPEED * simdt) * inputStatus;
+		if (velocity > OMMU_DEFAULT_WALKING_SPEED) velocity = OMMU_DEFAULT_WALKING_SPEED;
+		if (velocity < -OMMU_DEFAULT_WALKING_SPEED) velocity = -OMMU_DEFAULT_WALKING_SPEED;
+	}
+	else {
+		// 'Drag' implementation.
+		velocity -= (velocity * simdt);
+	}
+
+	if (velocity > -0.01 && velocity < 0.01) velocity = 0.0;
+}
 // TODO : Implement acceleration 
 void oMMU_MMU::doGroundMovement(double deltaT)
 {
+	// Calculate the current X / Y velocity.
+	CalculateVelocity(m_surfaceVelocity.x, inputStatus.xInput, deltaT);
+	CalculateVelocity(m_surfaceVelocity.y, inputStatus.yInput, deltaT);
+
 	VESSELSTATUS2 vs2;
 	memset(&vs2, 0, sizeof(vs2));
 	vs2.version = 2;
 	GetStatusEx(&vs2);
 
 	double planetRadius = oapiGetSize(GetSurfaceRef());
-	double degrees = (planetRadius * 2 * PI) / 360;
+	double degreesPerMeter = (planetRadius * 2 * PI) / 360;
 
-	if (rotate == 1) {
+	if (inputStatus.rotateInput == 0) {
 		vs2.surf_hdg += (45 * deltaT) * RAD;
 	}
-	if (rotate == -1) {
+	if (inputStatus.rotateInput == -1) {
 		vs2.surf_hdg -= (45 * deltaT) * RAD;
 	}
 
@@ -297,11 +305,21 @@ void oMMU_MMU::doGroundMovement(double deltaT)
 	if (vs2.surf_hdg < 0) {
 		vs2.surf_hdg = 360;
 	}
-	double d_lat = (forwardVelocity * deltaT * cos(vs2.surf_hdg)) / degrees;
-	double d_lng = (forwardVelocity * deltaT * sin(vs2.surf_hdg)) / degrees;
-	vs2.surf_lat += d_lat * RAD;
-	vs2.surf_lng += d_lng * RAD;
 
+	// TODO: Tidy this up once I remember basic trig.
+	double d_lat, d_lng;
+	d_lat = (m_surfaceVelocity.y * cos(vs2.surf_hdg));
+	d_lng = (m_surfaceVelocity.y * sin(vs2.surf_hdg));
+
+	// Calculate sideways component
+	double sidewaysMovementDirection = m_surfaceVelocity.x < -0.00 ? -1 : 1;
+	d_lat += ((m_surfaceVelocity.x * cos(vs2.surf_hdg + (1.571 * sidewaysMovementDirection)))) * sidewaysMovementDirection;
+	d_lng += ((m_surfaceVelocity.x * sin(vs2.surf_hdg + (1.571 * sidewaysMovementDirection)))) * sidewaysMovementDirection;
+
+	vs2.surf_lat += ((d_lat * deltaT) / degreesPerMeter) * RAD;
+	vs2.surf_lng += ((d_lng * deltaT) / degreesPerMeter) * RAD;
+
+	// Update the rotation matix.
 	double lng, lat, hdg;
 	lng = vs2.surf_lng;
 	lat = vs2.surf_lat;
@@ -320,6 +338,7 @@ void oMMU_MMU::doGroundMovement(double deltaT)
 	vs2.arot.z = atan2(RotMatrix_Def.m12, RotMatrix_Def.m11);
 	vs2.vrot.x = 1.3;
 
+	// Update the vessel state.
 	DefSetStateEx(&vs2);
 }
 
@@ -328,7 +347,6 @@ void oMMU_MMU::doGroundMovement(double deltaT)
 /// </summary>
 void oMMU_MMU::TryIngress()
 {
-
 	/* Load the oMMU Core DLL (if not already loaded) */
 	if (!s_isOMMULoaded) {
 		bool dllLoadSuccess = false;
@@ -340,7 +358,6 @@ void oMMU_MMU::TryIngress()
 			}
 
 			getClosestMMUVessel = reinterpret_cast<getClosestVessel>(GetProcAddress(s_ommuDLLHandle, "GetClosestMMUCompatibleVessel"));
-			/* One last error check - if we pass this point alles ist gut and we can fondle some bits */
 			if (!getClosestMMUVessel) {
 				dllLoadSuccess = false;
 				FreeLibrary(s_ommuDLLHandle);
@@ -371,7 +388,7 @@ void oMMU_MMU::clbkLoadStateEx(FILEHANDLE scn, void* vs)
 		if (!_strnicmp(line, "CREW", 4)) {
 			mmuData = new oMMUCrew();
 			sscanf(line + 4, "%[^-]::%[^::]::%i::%i::%lf::%[^::]::%[^::]", mmuData->role.GetBuffer(2048), mmuData->name.GetBuffer(2048),
-				&mmuData->age, &mmuData->pulse, &mmuData->weight,mmuData->evaMesh.GetBuffer(2048), mmuData->miscData.GetBuffer(2048));
+				&mmuData->age, &mmuData->pulse, &mmuData->weight, mmuData->evaMesh.GetBuffer(2048), mmuData->miscData.GetBuffer(2048));
 			mmuData->name.ReleaseBuffer();
 			mmuData->role.ReleaseBuffer();
 			mmuData->evaMesh.ReleaseBuffer();
@@ -407,7 +424,7 @@ DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel)
 // --------------------------------------------------------------
 // Vessel cleanup
 // --------------------------------------------------------------
-DLLCLBK void ovcExit(VESSEL * vessel)
+DLLCLBK void ovcExit(VESSEL* vessel)
 {
 	if (vessel) delete (oMMU_MMU*)vessel;
 }

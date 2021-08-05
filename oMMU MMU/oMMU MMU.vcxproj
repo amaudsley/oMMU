@@ -90,7 +90,7 @@
     <Link>
       <OutputFile>$(ModuleDir)\$(ProjectName).dll</OutputFile>
       <IgnoreSpecificDefaultLibraries>msvcrt.lib</IgnoreSpecificDefaultLibraries>
-      <AdditionalDependencies>oMMU_API.lib;XRSound.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>oMMU_API.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

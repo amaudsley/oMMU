@@ -134,6 +134,7 @@ namespace oMMU_API {
 		else
 			return oMMUStatus::oMMUNotInstalled;
 	}
+	
 	oMMUStatus oMMUBridge::TransferCrew(int crewIndex, const VESSEL* targetVessel)
 	{
 		if (IsMMULoaded())

@@ -1,10 +1,4 @@
 /*** Orbiter MMU API ***/
-/* Part of the Orbiter MMU package - Version 1
- *
- * Copyright 2017-2019 Adam "Woo482" Maudsley
- * All rights reserved. Do not redestribute.
-*/
-
 #pragma once
 #include "atlstr.h"
 #include "Orbitersdk.h"

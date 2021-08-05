@@ -189,11 +189,26 @@ namespace oMMU_API {
 		oMMU() {}
 	};
 
+
+	/** \name Interfaces
+	 * Interfaces allowing for advanced functionality.
+	 */
+	 ///@{
 	/* Interface exposing event handling methods for oMMU capable vessels */
 	class ISupportsOMMUCallbacks {
 	public:
+		/**
+		 * \brief Event handler for crew transfer events.
+		 */
 		virtual bool OnTryTransferCrew(const VESSEL* otherVessel, const oMMUCrew& crewMember, int dockingPortID = 0) = 0;
-		virtual bool OnTryCrewEnter(const oMMUCrew& crewMember, int airlockID = 1) = 0;
+		
+		/**
+		 * \brief Event handler for crew ingress events.
+		 */
+		virtual bool OnTryCrewIngress(const oMMUCrew& crewMember, int airlockID = 1) = 0;
+		
 		virtual bool OnInteractionTriggered(const InteractionArea& area) = 0;
 	};
+	///@}
+
 }
