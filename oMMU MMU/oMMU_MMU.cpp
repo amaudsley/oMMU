@@ -126,10 +126,6 @@ void oMMU_MMU::clbkSetClassCaps(FILEHANDLE cfg)
 /// <param name="mjd"></param>
 void oMMU_MMU::clbkPreStep(double simt, double simdt, double mjd)
 {
-	// TODO : Move to clbkPostCreation?
-	if (m_hasBeenInitialized == false)
-		setMMUState();
-
 	/* Pre-step behaviour for an MMU that is still alive */
 	if (m_currentState != mmuState::DEAD) {
 		if (GroundContact()) {
@@ -264,7 +260,6 @@ MATRIX3 oMMU_MMU::RotationMatrix(VECTOR3 angles, bool xyz = FALSE)
 	return m;
 }
 
-
 static inline void CalculateVelocity(double& velocity, int inputStatus, double simdt) {
 	if (inputStatus != 0) {
 		velocity += (OMMU_DEFAULT_WALKING_SPEED * simdt) * inputStatus;
@@ -293,7 +288,7 @@ void oMMU_MMU::doGroundMovement(double deltaT)
 	double planetRadius = oapiGetSize(GetSurfaceRef());
 	double degreesPerMeter = (planetRadius * 2 * PI) / 360;
 
-	if (inputStatus.rotateInput == 0) {
+	if (inputStatus.rotateInput == 1) {
 		vs2.surf_hdg += (45 * deltaT) * RAD;
 	}
 	if (inputStatus.rotateInput == -1) {
@@ -399,6 +394,12 @@ void oMMU_MMU::clbkLoadStateEx(FILEHANDLE scn, void* vs)
 	}
 }
 
+void oMMU_MMU::clbkPostCreation()
+{
+	if (m_hasBeenInitialized == false)
+		setMMUState();
+}
+
 /* Save status to the scenario file */
 void oMMU_MMU::clbkSaveState(FILEHANDLE scn)
 {
@@ -408,6 +409,7 @@ void oMMU_MMU::clbkSaveState(FILEHANDLE scn)
 	cbuf.Format("%s::%s::%i::%i::%lf::%s", mmuData->role, mmuData->name, mmuData->age, mmuData->pulse, mmuData->weight, mmuData->evaMesh, mmuData->miscData);
 	oapiWriteScenario_string(scn, "CREW", cbuf.GetBuffer());
 }
+
 
 // ==============================================================
 // API callback interface

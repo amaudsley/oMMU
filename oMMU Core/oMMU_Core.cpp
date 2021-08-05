@@ -196,9 +196,12 @@ oMMUStatus oMMUCore::BeginEVA(int crewIndex, int airlockIndex, bool setOnGround,
 
 		/* Create MMU Vessel - ensure vessel state changes are made *before* this point */
 		auto mmuVessel = oapiCreateVesselEx(mmuName, "oMMU", &vesselStatus);
-		oMMU_MMU* newMMU = static_cast<oMMU_MMU*>(oapiGetVesselInterface(mmuVessel)); // Instantiate the new MMU
-		newMMU->setMMUData(mCrew[crewIndex]); // Pass crew data along
+		
+		VESSEL4* newMMUVessel = static_cast<VESSEL4*>(oapiGetVesselInterface(mmuVessel)); // Instantiate the new MMU
+		auto mmuVesselInterface = dynamic_cast<IMMUVessel*>(newMMUVessel); // Get the interface used for setting data.
 
+		mmuVesselInterface->SetCrewData(mCrew[crewIndex]); // Pass crew data along.
+		
 		RemoveCrew(crewIndex);
 
 		// Set camera / input focus on the new MMU vessel if requested
@@ -334,7 +337,7 @@ void oMMUCore::SaveState(FILEHANDLE scn)
 }
 
 // TODO : Comment TryIngress
-oMMUStatus oMMUCore::TryIngress(const VESSEL* hMMU, double* ret)
+oMMUStatus oMMUCore::TryIngress(VESSEL4* hMMU, double* ret)
 {
 	/* Early escape if attempting to enter a vessel without airlocks. */
 	if (mAirlocks.empty())
@@ -356,7 +359,8 @@ oMMUStatus oMMUCore::TryIngress(const VESSEL* hMMU, double* ret)
 			/* Simple 'collision' check to see if we're within the airlock catchment area */
 			const double distance = dist(airlockGlobalCoords, mmuGlobalCoords);
 			if (distance < airlock.radius) {
-				auto crewData = *((oMMU_MMU*)hMMU)->getMMUData();
+				auto mmuVesselInterface = dynamic_cast<IMMUVessel*>(hMMU); // Get the interface used for setting data.
+				auto crewData = *mmuVesselInterface->GetCrewData();
 				return this->AddCrew(crewData);
 			}
 		}

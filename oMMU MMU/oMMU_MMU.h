@@ -9,6 +9,7 @@
 
 #include "Orbitersdk.h"
 #include "../oMMU Core/oMMU_Core.h"
+#include "../oMMU API/oMMU_API.h"
 
 enum mmuState {
 	IN_SPACE,
@@ -30,7 +31,7 @@ static bool s_isOMMULoaded = false;
 static HINSTANCE s_ommuDLLHandle;
 static getClosestVessel getClosestMMUVessel;
 
-class oMMU_MMU : public VESSEL4 {
+class oMMU_MMU : public VESSEL4, public IMMUVessel {
 public:
 	oMMU_MMU(OBJHANDLE hVessel, int flightmodel);
 	~oMMU_MMU();
@@ -43,18 +44,19 @@ public:
 	bool clbkLoadVC(int id);
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadStateEx(FILEHANDLE scn, void* vs);
-
-	// Inherited via IMMU
-	//DLLEXPORT VVV
-	void setMMUData(const oMMUCrew& crew) { mmuData = new oMMUCrew(crew); }
-	const oMMUCrew* getMMUData() {
-		return mmuData;
-	}
+	void clbkPostCreation();
 
 	void setMMUState(mmuState newState = mmuState::IN_SPACE);
 	MATRIX3 RotationMatrix(VECTOR3 angles, bool xyz);
 	void doGroundMovement(double deltaT);
 	void TryIngress();
+	
+	virtual void SetCrewData(const oMMUCrew& crew) override {
+		mmuData = new oMMUCrew(crew);
+	}
+	virtual const oMMUCrew* GetCrewData() override {
+		return mmuData;
+	}
 
 private:
 	oMMUCrew* mmuData;

@@ -66,7 +66,7 @@ public:
 
 	virtual void SaveState(FILEHANDLE scn);
 
-	virtual oMMUStatus TryIngress(const VESSEL *hMMU, double *ret);
+	virtual oMMUStatus TryIngress(VESSEL4* hMMU, double *ret);
 
 	virtual int AddInteractionArea(const InteractionArea& area);
 	

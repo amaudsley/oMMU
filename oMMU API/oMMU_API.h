@@ -161,7 +161,7 @@ namespace oMMU_API {
 
 
 		///@}
-		 
+
 		/** \name Interaction Areas
 		 * Allows for oMMU crew vessels to interact with other vessels via actions - Carry out repairs, start fires, deploy cargo, etc.
 		 */
@@ -201,7 +201,7 @@ namespace oMMU_API {
 		 * \brief Event handler for crew transfer events.
 		 */
 		virtual bool OnTryTransferCrew(const VESSEL* otherVessel, const oMMUCrew& crewMember, int dockingPortID = 0) = 0;
-		
+
 		/**
 		 * \brief Event handler for crew ingress events.
 		 */
@@ -211,6 +211,23 @@ namespace oMMU_API {
 	class ISupportsInteractionAreaCallbacks {
 	public:
 		virtual bool OnInteractionTriggered(const InteractionArea& area) = 0;
+	};
+
+	/* Interface for MMU Vessels. Allows accessing / updating oMMUCrew data against a spawned MMU*/
+	class IMMUVessel {
+	public:
+		/**
+		* \brief Sets the oMMUCrew data structure held by an MMU Vessel.
+		* \param crew oMMUCrew data to set.
+		* \return OMMUStatus message - EVASucess on sucess, context specific failure message otherwise
+		*/
+		virtual void SetCrewData(const oMMUCrew& crew) = 0;
+
+		/**
+		* \brief Gets the oMMUCrew data structure held by an MMU Vessel.
+		* \return Pointer to the vessels' oMMUCrew data structure.
+		*/
+		virtual const oMMUCrew* GetCrewData() = 0;
 	};
 	///@}
 
