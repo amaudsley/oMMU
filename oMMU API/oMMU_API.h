@@ -16,7 +16,7 @@ namespace oMMU_API {
 		  * \param hVessel Vessel implementing OMMU, usually 'this'
 		  * \return Returns an instance of OMMU, or null if an error has occured
 		  */
-		static oMMU* GetInstance(VESSEL* hVessel);
+		static oMMU* GetInstance(VESSEL4* hVessel);
 
 		///@}
 
@@ -195,7 +195,7 @@ namespace oMMU_API {
 	 */
 	 ///@{
 	/* Interface exposing event handling methods for oMMU capable vessels */
-	class ISupportsOMMUCallbacks {
+	class ISupportsCrewCallbacks {
 	public:
 		/**
 		 * \brief Event handler for crew transfer events.
@@ -206,7 +206,10 @@ namespace oMMU_API {
 		 * \brief Event handler for crew ingress events.
 		 */
 		virtual bool OnTryCrewIngress(const oMMUCrew& crewMember, int airlockID = 1) = 0;
-		
+	};
+
+	class ISupportsInteractionAreaCallbacks {
+	public:
 		virtual bool OnInteractionTriggered(const InteractionArea& area) = 0;
 	};
 	///@}

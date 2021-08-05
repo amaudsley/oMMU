@@ -5,7 +5,7 @@ namespace oMMU_API {
 	/* oMMUBridge - provides the actual interace between the public oMMU API and the oMMU core */
 	class oMMUBridge : public oMMU {
 	public:
-		oMMUBridge(VESSEL* hVessel);
+		oMMUBridge(VESSEL4* hVessel);
 		~oMMUBridge()
 		{
 			delete m_poMMUCore;
@@ -36,7 +36,7 @@ namespace oMMU_API {
 	private:
 		HMODULE m_hDLL;
 		oMMUCore * m_poMMUCore;
-		VESSEL * m_pVessel;		
+		VESSEL4 * m_pVessel;		
 
 	};
 }

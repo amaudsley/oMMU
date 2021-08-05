@@ -83,7 +83,7 @@ double LiftCoeff(double aoa)
 // Shuttle-PB class interface
 // ==============================================================
 
-class oMMU_PB : public VESSEL3 {
+class oMMU_PB : public VESSEL4, public ISupportsCrewCallbacks {
 public:
 	oMMU_PB(OBJHANDLE hVessel, int flightmodel);
 	~oMMU_PB();
@@ -97,7 +97,6 @@ public:
 
 	bool clbkDrawHUD(int mode, const HUDPAINTSPEC* hps, oapi::Sketchpad* skp);
 	bool OnIngressEvent(IngressEventArgs& args);
-	void OnTryTransferCrew(const VESSEL* otherVessel, const oMMUCrew& crewMember, int dockingPortID);
 
 private:
 	oMMU *crew;
@@ -112,10 +111,21 @@ private:
 	// transformations for control surface animations
 	static MGROUP_ROTATE trans_Laileron, trans_Raileron;
 	static MGROUP_ROTATE trans_Lelevator, trans_Relevator;
+
+	// Inherited via ISupportsOMMUCallbacks
+	virtual bool OnTryTransferCrew(const VESSEL* otherVessel, const oMMUCrew& crewMember, int dockingPortID = 0) override
+	{
+		return false;
+	}
+
+	virtual bool OnTryCrewIngress(const oMMUCrew& crewMember, int airlockID = 1) override
+	{
+		return false;
+	}
 };
 
 oMMU_PB::oMMU_PB(OBJHANDLE hVessel, int flightmodel)
-	: VESSEL3(hVessel, flightmodel)
+	: VESSEL4(hVessel, flightmodel)
 {
 	crew = oMMU::GetInstance(this);
 	crew->SetCrewLimit(crewLimit);
@@ -387,11 +397,6 @@ bool oMMU_PB::clbkDrawHUD(int mode, const HUDPAINTSPEC* hps, oapi::Sketchpad* sk
 
 
 	return true;
-}
-
-void oMMU_PB::OnTryTransferCrew(const VESSEL* otherVessel, const oMMUCrew& crewMember, int dockingPortID)
-{
-
 }
 
 // ==============================================================

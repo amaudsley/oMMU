@@ -8,7 +8,7 @@ using namespace oMMU_API;
 static std::vector<oMMUCore*> m_mmuCompatVessels;
 
 
-oMMUCore::oMMUCore(VESSEL* hVessel)
+oMMUCore::oMMUCore(VESSEL4* hVessel)
 {
 
 #if DEBUG
@@ -400,9 +400,12 @@ oMMUStatus oMMUCore::TryTransfer(const VESSEL* pTargetVessel, int crewIndex) {
 
 	/* Try to transfer to the retrieved vessel, invoke the handler if available. */
 	bool canAddCrew = true;
-	//if (otherVesselInterface->OnTryTransferCrew != nullptr) {
-	//	canAddCrew = otherVesselInterface->OnTryTransferCrew(pParentVessel, mCrew[crewIndex], 0);
-	//}
+	// Attempt to invoke the interface
+	auto eventingInterface = dynamic_cast<ISupportsCrewCallbacks*>(otherVesselInterface->pParentVessel);
+
+	if (eventingInterface != nullptr) {
+		canAddCrew = eventingInterface->OnTryTransferCrew(pParentVessel, mCrew[crewIndex], 0);
+	}
 
 	/* Transfer the crew member */
 	if (canAddCrew) {
@@ -442,7 +445,7 @@ oMMUStatus oMMUCore::SetCrewLimit(int crewLimit)
 }
 
 // TODO : Comment GetoMMUInstance
-oMMUCore* GetoMMUInstance(VESSEL* hVessel)
+oMMUCore* GetoMMUInstance(VESSEL4* hVessel)
 {
 	return new oMMUCore(hVessel);
 }

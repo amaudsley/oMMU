@@ -14,8 +14,8 @@ struct AirlockExt : public Airlock{
 
 class oMMUCore {
 public:
-	VESSEL * pParentVessel;
-	oMMUCore(VESSEL* hVessel);
+	VESSEL4* pParentVessel;
+	oMMUCore(VESSEL4* hVessel);
 	~oMMUCore();
 
 	//std::vector<oMMUCrew> mCrew;
@@ -85,9 +85,9 @@ private:
 	int m_mmuCompatIndex;
 };
 
-typedef oMMUCore* (__cdecl *ioMMUFactory)(VESSEL *hVessel);
+typedef oMMUCore* (__cdecl *ioMMUFactory)(VESSEL4 *hVessel);
 
-extern "C" __declspec(dllexport) oMMUCore* __cdecl GetoMMUInstance(VESSEL *hVessel);
+extern "C" __declspec(dllexport) oMMUCore* __cdecl GetoMMUInstance(VESSEL4 *hVessel);
 
 extern "C" __declspec(dllexport) oMMUCore* __cdecl GetClosestMMUCompatibleVessel(const VESSEL *hVessel);
 

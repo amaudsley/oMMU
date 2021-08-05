@@ -1,7 +1,7 @@
 #include "oMMU_Bridge.h"
 namespace oMMU_API {
 
-	oMMUBridge::oMMUBridge(VESSEL* hVessel)
+	oMMUBridge::oMMUBridge(VESSEL4* hVessel)
 	{
 		m_pVessel = hVessel;
 	}
