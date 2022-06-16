@@ -10,6 +10,7 @@
 #include "Orbitersdk.h"
 #include "../oMMU Core/oMMU_Core.h"
 #include "../oMMU API/oMMU_API.h"
+#include "Spotlight.h"
 
 enum mmuState {
 	IN_SPACE,
@@ -23,6 +24,7 @@ struct SurfaceMovementInputStatus {
 	int xInput = 0;
 	int yInput = 0;
 	int rotateInput = 0;
+	bool doJump = 0;
 };
 
 /* Utilized for the (poor) attempt at having a private API */
@@ -60,6 +62,8 @@ public:
 
 private:
 	oMMUCrew* mmuData;
+	Spotlight* m_pHelmetSpotlight;
+
 	PROPELLANT_HANDLE m_oxygenResource;
 	mmuState m_currentState = mmuState::IN_SPACE;
 	bool m_hasBeenInitialized = false;

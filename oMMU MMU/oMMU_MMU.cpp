@@ -28,6 +28,9 @@ oMMU_MMU::~oMMU_MMU()
 
 	delete mmuData;
 	mmuData = nullptr;
+
+	delete m_pHelmetSpotlight;
+	m_pHelmetSpotlight = nullptr;
 }
 
 
@@ -115,6 +118,9 @@ void oMMU_MMU::clbkSetClassCaps(FILEHANDLE cfg)
 
 	CreateThrusterGroup(th_rcs + 12, 1, THGROUP_ATT_FORWARD);
 	CreateThrusterGroup(th_rcs + 13, 1, THGROUP_ATT_BACK);
+
+	// Create an instance of the Spotlight class.
+	m_pHelmetSpotlight = new Spotlight(this, _V(-0.15, 1.1, 0.1), _V(0, 0, 1), true);
 }
 
 /// <summary>
@@ -149,7 +155,15 @@ void oMMU_MMU::clbkPreStep(double simt, double simdt, double mjd)
 
 void oMMU_MMU::clbkPostStep(double simt, double simdt, double mjd)
 {
+	VECTOR3 force;
+	VECTOR3 gravityVector;
+	this->GetForceVector(force);
+	this->GetWeightVector(gravityVector);
+	// this->GetLiftVector(gravityVector);
+	VECTOR3 theVectorForCalc = force - gravityVector;
+	float totalForce = abs((theVectorForCalc.x + theVectorForCalc.y + theVectorForCalc.z));
 
+	sprintf(oapiDebugString(), "Force: %f", totalForce);
 }
 
 int oMMU_MMU::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
@@ -158,6 +172,11 @@ int oMMU_MMU::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate)
 		return 0;
 	if (key == OAPI_KEY_E) {
 		TryIngress();
+	}
+	
+	if (key == OAPI_KEY_L) {
+		m_pHelmetSpotlight->Toggle();
+		return 1;
 	}
 
 	return 0;
@@ -197,6 +216,13 @@ int oMMU_MMU::clbkConsumeDirectKey(char* kstate)
 		}
 		else {
 			inputStatus.rotateInput = 0;
+		}
+
+		if (KEYDOWN(kstate, OAPI_KEY_SPACE)) {
+			inputStatus.doJump = true;
+		}
+		else {
+			inputStatus.doJump = false;
 		}
 	}
 	return 0;
@@ -332,8 +358,18 @@ void oMMU_MMU::doGroundMovement(double deltaT)
 	vs2.arot.y = -asin(RotMatrix_Def.m13);
 	vs2.arot.z = atan2(RotMatrix_Def.m12, RotMatrix_Def.m11);
 	vs2.vrot.x = 1.3;
-
 	// Update the vessel state.
+	if (inputStatus.doJump) {
+		vs2.status = 0;
+		VECTOR3 relativeVelocity;
+		m_surfaceVelocity.y = 2;
+
+		VECTOR3 _rvel; // tempoary rvel storage.
+		Local2Rel(m_surfaceVelocity, _rvel);
+		_rvel -= vs2.rpos;
+		vs2.rvel += _rvel;
+		this->setMMUState(mmuState::IN_SPACE);
+	}
 	DefSetStateEx(&vs2);
 }
 

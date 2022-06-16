@@ -13,15 +13,27 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Components">
+      <UniqueIdentifier>{959384c6-9ea4-45e3-83e0-9cfdcca03408}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Components">
+      <UniqueIdentifier>{8163e14a-a54a-4428-85fe-da4632544701}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="oMMU_MMU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Spotlight.cpp">
+      <Filter>Source Files\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="oMMU_MMU.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Spotlight.h">
+      <Filter>Header Files\Components</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

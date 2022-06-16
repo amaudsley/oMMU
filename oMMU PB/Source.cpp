@@ -1,19 +1,3 @@
-// ==============================================================
-//                 ORBITER MODULE: oMMU_PB
-//                  Part of the ORBITER SDK
-//          Copyright (C) 2002-2004 Martin Schweiger
-//                   All rights reserved
-//
-// oMMU_PB.cpp
-// Control module for oMMU_PB vessel class
-//
-// Notes:
-// This is an example for a "minimal" vessel implementation which
-// only overloads the clbkSetClassCaps method to define vessel
-// capabilities and otherwise uses the default VESSEL class
-// behaviour.
-// ==============================================================
-
 #define STRICT
 #define ORBITER_MODULE
 
@@ -42,7 +26,7 @@ const double  PB_MAXMAINTH = 3e4;
 const double  PB_MAXHOVERTH = 1.5e4;
 const double  PB_MAXRCSTH = 2e2;
 
-const VECTOR3 PB_DOCK_POS = { 10,1.3,-1 };      // docking port location [m]
+const VECTOR3 PB_DOCK_POS = { 0,1.3,-1 };      // docking port location [m]
 const VECTOR3 PB_DOCK_DIR = { 0,1,0 };         // docking port approach direction
 const VECTOR3 PB_DOCK_ROT = { 0,0,-1 };        // docking port alignment direction
 
@@ -76,52 +60,41 @@ double LiftCoeff(double aoa)
 		(CL[5] - CL[4]) / (AOA[5] - AOA[4]), (CL[6] - CL[5]) / (AOA[6] - AOA[5]),
 		(CL[7] - CL[6]) / (AOA[7] - AOA[6]), (CL[8] - CL[7]) / (AOA[8] - AOA[7]) };
 	for (i = 0; i < nlift - 1 && AOA[i + 1] < aoa; i++);
-	return CL[i] + (aoa - AOA[i])*SCL[i];
+	return CL[i] + (aoa - AOA[i]) * SCL[i];
 }
 
 // ==============================================================
 // Shuttle-PB class interface
 // ==============================================================
 
-class oMMU_PB : public VESSEL4, public ISupportsCrewCallbacks {
+class oMMU_PB : public VESSEL4 {
 public:
 	oMMU_PB(OBJHANDLE hVessel, int flightmodel);
 	~oMMU_PB();
 	void clbkSetClassCaps(FILEHANDLE cfg);
 
-	void clbkLoadStateEx(FILEHANDLE scn, void * vs);
+	void clbkLoadStateEx(FILEHANDLE scn, void* vs);
 
 	void clbkSaveState(FILEHANDLE scn);
 
-	int clbkConsumeBufferedKey(DWORD key, bool down, char * kstate);
+	int clbkConsumeBufferedKey(DWORD key, bool down, char* kstate);
 
 	bool clbkDrawHUD(int mode, const HUDPAINTSPEC* hps, oapi::Sketchpad* skp);
 	bool OnIngressEvent(IngressEventArgs& args);
 
 private:
-	oMMU *crew;
+	oMMU* crew;
 	int selectedSlot = 1;
 	int crewLimit = 3;
-	static void vlift(VESSEL *v, double aoa, double M, double Re,
-		void *context, double *cl, double *cm, double *cd);
-	static void hlift(VESSEL *v, double aoa, double M, double Re,
-		void *context, double *cl, double *cm, double *cd);
+	static void vlift(VESSEL* v, double aoa, double M, double Re,
+		void* context, double* cl, double* cm, double* cd);
+	static void hlift(VESSEL* v, double aoa, double M, double Re,
+		void* context, double* cl, double* cm, double* cd);
 
 
 	// transformations for control surface animations
 	static MGROUP_ROTATE trans_Laileron, trans_Raileron;
 	static MGROUP_ROTATE trans_Lelevator, trans_Relevator;
-
-	// Inherited via ISupportsOMMUCallbacks
-	virtual bool OnTryTransferCrew(const VESSEL* otherVessel, const oMMUCrew& crewMember, int dockingPortID = 0) override
-	{
-		return false;
-	}
-
-	virtual bool OnTryCrewIngress(const oMMUCrew& crewMember, int airlockID = 1) override
-	{
-		return false;
-	}
 };
 
 oMMU_PB::oMMU_PB(OBJHANDLE hVessel, int flightmodel)
@@ -150,8 +123,8 @@ static VECTOR3 LWING_REF = { -1.3,-0.725,-1.5 };
 static VECTOR3 LWING_AXIS = { -0.9619,-0.2735,0 };
 static VECTOR3 RWING_REF = { 1.3,-0.725,-1.5 };
 static VECTOR3 RWING_AXIS = { 0.9619,-0.2735,0 };
-static float AILERON_RANGE = (float)(20.0*RAD);
-static float ELEVATOR_RANGE = (float)(30.0*RAD);
+static float AILERON_RANGE = (float)(20.0 * RAD);
+static float ELEVATOR_RANGE = (float)(30.0 * RAD);
 MGROUP_ROTATE oMMU_PB::trans_Laileron(0, &GRP_LWING, 1, LWING_REF, LWING_AXIS, AILERON_RANGE);
 MGROUP_ROTATE oMMU_PB::trans_Raileron(0, &GRP_RWING, 1, RWING_REF, RWING_AXIS, AILERON_RANGE);
 MGROUP_ROTATE oMMU_PB::trans_Lelevator(0, &GRP_LWING, 1, LWING_REF, LWING_AXIS, -ELEVATOR_RANGE);
@@ -316,8 +289,8 @@ void oMMU_PB::clbkSetClassCaps(FILEHANDLE cfg)
 
 	// associate a mesh for the visual
 	AddMesh("ShuttlePB");
-	crew->CreateAirlockFromPort(0,true);
-	
+	crew->CreateAirlockFromPort(0, true);
+
 	//Airlock *test = crew->GetAirlockState(999);
 	//Airlock *test2 = crew->GetAirlockState(0);
 }
@@ -325,9 +298,9 @@ void oMMU_PB::clbkSetClassCaps(FILEHANDLE cfg)
 
 
 /* Recall status from the scenario file  */
-void oMMU_PB::clbkLoadStateEx(FILEHANDLE scn, void *vs)
+void oMMU_PB::clbkLoadStateEx(FILEHANDLE scn, void* vs)
 {
-	char *line;
+	char* line;
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		crew->RecallState(line);
@@ -343,7 +316,7 @@ void oMMU_PB::clbkSaveState(FILEHANDLE scn)
 	SaveDefaultState(scn);
 	crew->SaveState(scn);
 }
-int oMMU_PB::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
+int oMMU_PB::clbkConsumeBufferedKey(DWORD key, bool down, char* kstate) {
 	if (!down)
 		return 0;
 	else {
@@ -357,17 +330,17 @@ int oMMU_PB::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 			crew->AddCrew(newMember);
 		}
 		else if (key == OAPI_KEY_E) {
-			crew->BeginEVA(selectedSlot, 0,true);
+			crew->BeginEVA(selectedSlot, 0, true);
 		}
 
 		if (key == OAPI_KEY_1) {
 			selectedSlot--;
 			if (selectedSlot < 0)
-				selectedSlot = crewLimit;
+				selectedSlot = crewLimit - 1;
 		}
 		if (key == OAPI_KEY_2) {
 			selectedSlot++;
-			if (selectedSlot > crewLimit)
+			if (selectedSlot >= crewLimit)
 				selectedSlot = 0;
 		}
 	}
@@ -380,16 +353,16 @@ bool oMMU_PB::clbkDrawHUD(int mode, const HUDPAINTSPEC* hps, oapi::Sketchpad* sk
 	auto lhs = hps->W * 0.1;
 	auto top = hps->H * 0.3;
 	skp->Text(lhs, top, "Selected crew member: ", 23);
-	
+
 	oMMUCrew selectedMember;
 	auto crewStatus = crew->GetCrewState(selectedSlot, selectedMember);
 	if (crewStatus == oMMUStatus::OK) {
-		cbuf.Format("(Slot %i of %i) %s %s", selectedSlot + 1,crewLimit,selectedMember.role.GetBuffer(),selectedMember.name.GetBuffer());
+		cbuf.Format("(Slot %i of %i) %s %s", selectedSlot + 1, crewLimit, selectedMember.role.GetBuffer(), selectedMember.name.GetBuffer());
 		selectedMember.role.ReleaseBuffer();
 		selectedMember.name.ReleaseBuffer();
 	}
 	else {
-		cbuf.Format("(Slot %i of %i) <<EMPTY>>",selectedSlot + 1,crewLimit);
+		cbuf.Format("(Slot %i of %i) <<EMPTY>>", selectedSlot + 1, crewLimit);
 	}
 	skp->Text(lhs, top + 16, cbuf.GetString(), cbuf.GetLength());
 
@@ -403,30 +376,30 @@ bool oMMU_PB::clbkDrawHUD(int mode, const HUDPAINTSPEC* hps, oapi::Sketchpad* sk
 // Airfoil lift/drag functions
 // ==============================================================
 
-void oMMU_PB::vlift(VESSEL *v, double aoa, double M, double Re,
-	void *context, double *cl, double *cm, double *cd)
+void oMMU_PB::vlift(VESSEL* v, double aoa, double M, double Re,
+	void* context, double* cl, double* cm, double* cd)
 {
 	static const double clp[] = {  // lift coefficient from -pi to pi in 10deg steps
 		-0.1,-0.5,-0.4,-0.1,0,0,0,0,0,0,0,0,0,0,-0.2,-0.6,-0.6,-0.4,0.2,0.5,0.9,0.8,0.2,0,0,0,0,0,0,0,0,0,0.1,0.4,0.5,0.3,-0.1,-0.5
 	};
-	static const double aoa_step = 10.0*RAD;
+	static const double aoa_step = 10.0 * RAD;
 	double a, fidx, saoa = sin(aoa);
 	a = modf((aoa + PI) / aoa_step, &fidx);
 	int idx = (int)(fidx + 0.5);
 	*cl = clp[idx] * (1.0 - a) + clp[idx + 1] * a;     // linear interpolation
 	*cm = 0.0; //-0.03*sin(aoa-0.1);
-	*cd = 0.03 + 0.4*saoa*saoa;                // profile drag
+	*cd = 0.03 + 0.4 * saoa * saoa;                // profile drag
 	*cd += oapiGetInducedDrag(*cl, 1.0, 0.5); // induced drag
 	*cd += oapiGetWaveDrag(M, 0.75, 1.0, 1.1, 0.04);  // wave drag
 }
 
-void oMMU_PB::hlift(VESSEL *v, double aoa, double M, double Re,
-	void *context, double *cl, double *cm, double *cd)
+void oMMU_PB::hlift(VESSEL* v, double aoa, double M, double Re,
+	void* context, double* cl, double* cm, double* cd)
 {
 	static const double clp[] = {  // lift coefficient from -pi to pi in 45deg steps
 		0,0.4,0,-0.4,0,0.4,0,-0.4,0,0.4
 	};
-	static const double aoa_step = 45.0*RAD;
+	static const double aoa_step = 45.0 * RAD;
 	double a, fidx;
 	a = modf((aoa + PI) / aoa_step, &fidx);
 	int idx = (int)(fidx + 0.5);
@@ -444,7 +417,7 @@ void oMMU_PB::hlift(VESSEL *v, double aoa, double M, double Re,
 // --------------------------------------------------------------
 // Vessel initialisation
 // --------------------------------------------------------------
-DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel)
+DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel)
 {
 	return new oMMU_PB(hvessel, flightmodel);
 }
@@ -452,7 +425,7 @@ DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel)
 // --------------------------------------------------------------
 // Vessel cleanup
 // --------------------------------------------------------------
-DLLCLBK void ovcExit(VESSEL *vessel)
+DLLCLBK void ovcExit(VESSEL* vessel)
 {
 	if (vessel) delete (oMMU_PB*)vessel;
 }
